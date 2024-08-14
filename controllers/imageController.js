@@ -1,34 +1,15 @@
 const { mongoose } = require("mongoose");
 const { Image } = require("../models/imageModel");
 
-const getNextSequenceValue = async (sequenceName) => {
-    const sequenceDocument = await mongoose.connection.db
-        .collection('counters')
-        .findOneAndUpdate(
-            { _id: sequenceName },
-            { $inc: { sequence_value: 1 } },
-            { returnOriginal: false, upsert: true }
-        );
 
-    // If no document was found before the update, initialize the sequence value
-    if (!sequenceDocument.value) {
-        const newSequenceDocument = await mongoose.connection.db
-            .collection('counters')
-            .findOne({ _id: sequenceName });
-
-        // Return the sequence value from the newly created document
-        return newSequenceDocument.sequence_value;
-    }
-
-    // If document already existed, return the updated sequence value
-    return sequenceDocument.value.sequence_value;
-};
-
+function generateUniqueId() {
+    return Math.floor(Math.random() * 1e16);
+}
 
 
 const uploadImage = async (req, res) => {
     try {
-        const imageId = await getNextSequenceValue('imageId');
+        const imageId = generateUniqueId();
         // console.log(req.file.buffer.toString());
         const newImage = new Image({
             imageId,
@@ -62,5 +43,7 @@ const getImage = async (req, res) => {
         res.status(500).json({ success: false, error: 'Failed to retrieve image' });
     }
 }
+
+
 
 module.exports = { uploadImage, getImage };
